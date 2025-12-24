@@ -4,16 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Box, Mail, Lock, Eye, EyeOff, ArrowLeft, User, GraduationCap, BookOpen, KeyRound, CheckCircle } from 'lucide-react'
+import { Box, Mail, Lock, Eye, EyeOff, ArrowLeft, User, GraduationCap, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 
 export default function RegisterPage() {
-  const [step, setStep] = useState(1) // 1: email, 2: verify code, 3: create password
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,12 +20,11 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [otpCode, setOtpCode] = useState('')
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
-  // Step 1: Send OTP to email
-  const handleSendOTP = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -37,77 +34,6 @@ export default function RegisterPage() {
       setLoading(false)
       return
     }
-
-    try {
-      const res = await fetch('/api/auth/otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'send_otp',
-          email,
-          name,
-          role
-        })
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Gagal mengirim kode verifikasi')
-      }
-
-      // Move to OTP verification step
-      setStep(2)
-    } catch (err) {
-      setError(err.message || 'Terjadi kesalahan saat mengirim kode')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Step 2: Verify OTP code
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    if (otpCode.length !== 4) {
-      setError('Masukkan kode verifikasi 4 digit')
-      setLoading(false)
-      return
-    }
-
-    try {
-      const res = await fetch('/api/auth/otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'verify_otp',
-          email,
-          otp: otpCode
-        })
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Kode verifikasi salah')
-      }
-
-      // Move to password creation step
-      setStep(3)
-    } catch (err) {
-      setError(err.message || 'Kode verifikasi salah')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Step 3: Set password and complete registration
-  const handleSetPassword = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
 
     if (password !== confirmPassword) {
       setError('Password dan konfirmasi password tidak sama')
@@ -122,146 +48,47 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await fetch('/api/auth/otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'register',
+      // Register directly with Supabase
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role,
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+
+      if (signUpError) throw signUpError
+
+      // Check if user was created and can login immediately
+      // (Supabase allows immediate login if email confirmation is disabled)
+      if (data.user && !data.user.email_confirmed_at) {
+        // Try to sign in immediately
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password
         })
-      })
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Gagal membuat akun')
+        if (!signInError) {
+          router.push('/dashboard')
+          router.refresh()
+          return
+        }
       }
 
-      // Auto login after registration
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-      if (loginError) {
-        // If auto-login fails, redirect to login page
-        router.push('/login?registered=true')
-      } else {
-        router.push('/dashboard')
-      }
-      router.refresh()
+      // If immediate login not possible, show success message
+      setSuccess(true)
     } catch (err) {
-      setError(err.message || 'Terjadi kesalahan saat membuat akun')
+      setError(err.message || 'Terjadi kesalahan saat mendaftar')
     } finally {
       setLoading(false)
     }
   }
 
-  // Resend OTP
-  const handleResendOTP = async () => {
-    setLoading(true)
-    setError('')
-
-    try {
-      const res = await fetch('/api/auth/otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'send_otp',
-          email,
-          name,
-          role
-        })
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Gagal mengirim ulang kode')
-      }
-
-      alert('Kode verifikasi baru telah dikirim ke email Anda')
-    } catch (err) {
-      setError(err.message || 'Gagal mengirim ulang kode')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Step 2: Verify OTP Screen
-  if (step === 2) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 to-white">
-        <header className="p-4">
-          <button onClick={() => setStep(1)} className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Kembali</span>
-          </button>
-        </header>
-        <div className="flex-1 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md border-sky-100 shadow-xl">
-            <CardHeader className="text-center">
-              <div className="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <KeyRound className="w-10 h-10 text-sky-500" />
-              </div>
-              <CardTitle className="text-2xl text-sky-900">Verifikasi Email</CardTitle>
-              <CardDescription>
-                Masukkan kode 4 digit yang dikirim ke<br/>
-                <strong className="text-sky-700">{email}</strong>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleVerifyOTP} className="space-y-6">
-                {error && (
-                  <div className="bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-xl text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={4}
-                    value={otpCode}
-                    onChange={(value) => setOtpCode(value)}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
-                      <InputOTPSlot index={1} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
-                      <InputOTPSlot index={2} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
-                      <InputOTPSlot index={3} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-sky-500 hover:bg-sky-600 h-12 rounded-xl text-base"
-                  disabled={loading || otpCode.length !== 4}
-                >
-                  {loading ? 'Memverifikasi...' : 'Verifikasi'}
-                </Button>
-              </form>
-
-              <div className="text-center mt-6">
-                <p className="text-sm text-slate-600 mb-2">Tidak menerima kode?</p>
-                <button
-                  onClick={handleResendOTP}
-                  disabled={loading}
-                  className="text-sky-600 hover:text-sky-700 font-medium text-sm"
-                >
-                  Kirim Ulang Kode
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
-  // Step 3: Create Password Screen
-  if (step === 3) {
+  if (success) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 to-white">
         <header className="p-4">
@@ -271,71 +98,18 @@ export default function RegisterPage() {
           </Link>
         </header>
         <div className="flex-1 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md border-sky-100 shadow-xl">
-            <CardHeader className="text-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-10 h-10 text-green-500" />
+          <Card className="w-full max-w-md border-sky-100 text-center shadow-xl">
+            <CardContent className="pt-8 pb-8">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Mail className="w-10 h-10 text-green-500" />
               </div>
-              <CardTitle className="text-2xl text-sky-900">Buat Password</CardTitle>
-              <CardDescription>
-                Email terverifikasi! Silakan buat password untuk akun Anda.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSetPassword} className="space-y-4">
-                {error && (
-                  <div className="bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-xl text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password Baru</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Minimal 6 karakter"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      id="confirmPassword"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Ulangi password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-sky-500 hover:bg-sky-600 h-12 rounded-xl text-base"
-                  disabled={loading}
-                >
-                  {loading ? 'Menyimpan...' : 'Selesaikan Pendaftaran'}
-                </Button>
-              </form>
+              <h2 className="text-2xl font-bold text-sky-900 mb-2">Pendaftaran Berhasil!</h2>
+              <p className="text-slate-600 mb-6">
+                Akun Anda telah dibuat. Silakan cek email <strong className="text-sky-700">{email}</strong> untuk verifikasi, atau langsung login.
+              </p>
+              <Button asChild className="bg-sky-500 hover:bg-sky-600 w-full">
+                <Link href="/login">Masuk Sekarang</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -343,7 +117,6 @@ export default function RegisterPage() {
     )
   }
 
-  // Step 1: Email & Info Form
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 to-white">
       {/* Header */}
@@ -362,10 +135,10 @@ export default function RegisterPage() {
               <Box className="w-10 h-10 text-white" />
             </div>
             <CardTitle className="text-2xl text-sky-900">Daftar Akun</CardTitle>
-            <CardDescription>Langkah 1: Masukkan data diri</CardDescription>
+            <CardDescription>Buat akun SmartAR Edu baru</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSendOTP} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4">
               {error && (
                 <div className="bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-xl text-sm">
                   {error}
@@ -431,12 +204,51 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Minimal 6 karakter"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Ulangi password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
+                    required
+                  />
+                </div>
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-sky-500 hover:bg-sky-600 h-12 rounded-xl text-base"
                 disabled={loading}
               >
-                {loading ? 'Mengirim kode...' : 'Kirim Kode Verifikasi'}
+                {loading ? 'Mendaftar...' : 'Daftar'}
               </Button>
             </form>
 

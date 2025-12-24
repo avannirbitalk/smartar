@@ -53,7 +53,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center">
-              <Cube className="w-6 h-6 text-white" />
+              <Box className="w-6 h-6 text-white" />
             </div>
             <span className="font-bold text-xl text-sky-900">SmartAR Edu</span>
           </div>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Box, Mail, Lock, Eye, EyeOff, ArrowLeft, User, GraduationCap, BookOpen, KeyRound } from 'lucide-react'
+import { Box, Mail, Lock, Eye, EyeOff, ArrowLeft, User, GraduationCap, BookOpen, KeyRound, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,19 +39,22 @@ export default function RegisterPage() {
     }
 
     try {
-      // Use Supabase OTP sign in (will create user if not exists)
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: true,
-          data: {
-            name,
-            role,
-          }
-        }
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_otp',
+          email,
+          name,
+          role
+        })
       })
 
-      if (error) throw error
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal mengirim kode verifikasi')
+      }
 
       // Move to OTP verification step
       setStep(2)
@@ -68,20 +71,28 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
-    if (otpCode.length !== 6) {
-      setError('Masukkan kode verifikasi 6 digit')
+    if (otpCode.length !== 4) {
+      setError('Masukkan kode verifikasi 4 digit')
       setLoading(false)
       return
     }
 
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token: otpCode,
-        type: 'email'
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify_otp',
+          email,
+          otp: otpCode
+        })
       })
 
-      if (error) throw error
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Kode verifikasi salah')
+      }
 
       // Move to password creation step
       setStep(3)
@@ -92,7 +103,7 @@ export default function RegisterPage() {
     }
   }
 
-  // Step 3: Set password
+  // Step 3: Set password and complete registration
   const handleSetPassword = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -111,17 +122,37 @@ export default function RegisterPage() {
     }
 
     try {
-      const { data, error } = await supabase.auth.updateUser({
-        password: password
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'register',
+          email,
+          password
+        })
       })
 
-      if (error) throw error
+      const data = await res.json()
 
-      // Success - redirect to dashboard
-      router.push('/dashboard')
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal membuat akun')
+      }
+
+      // Auto login after registration
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (loginError) {
+        // If auto-login fails, redirect to login page
+        router.push('/login?registered=true')
+      } else {
+        router.push('/dashboard')
+      }
       router.refresh()
     } catch (err) {
-      setError(err.message || 'Terjadi kesalahan saat membuat password')
+      setError(err.message || 'Terjadi kesalahan saat membuat akun')
     } finally {
       setLoading(false)
     }
@@ -133,19 +164,23 @@ export default function RegisterPage() {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: true,
-          data: {
-            name,
-            role,
-          }
-        }
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_otp',
+          email,
+          name,
+          role
+        })
       })
 
-      if (error) throw error
-      setError('')
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal mengirim ulang kode')
+      }
+
       alert('Kode verifikasi baru telah dikirim ke email Anda')
     } catch (err) {
       setError(err.message || 'Gagal mengirim ulang kode')
@@ -172,7 +207,7 @@ export default function RegisterPage() {
               </div>
               <CardTitle className="text-2xl text-sky-900">Verifikasi Email</CardTitle>
               <CardDescription>
-                Masukkan kode 6 digit yang dikirim ke<br/>
+                Masukkan kode 4 digit yang dikirim ke<br/>
                 <strong className="text-sky-700">{email}</strong>
               </CardDescription>
             </CardHeader>
@@ -186,17 +221,15 @@ export default function RegisterPage() {
 
                 <div className="flex justify-center">
                   <InputOTP
-                    maxLength={6}
+                    maxLength={4}
                     value={otpCode}
                     onChange={(value) => setOtpCode(value)}
                   >
                     <InputOTPGroup>
-                      <InputOTPSlot index={0} className="w-12 h-14 text-xl border-sky-200" />
-                      <InputOTPSlot index={1} className="w-12 h-14 text-xl border-sky-200" />
-                      <InputOTPSlot index={2} className="w-12 h-14 text-xl border-sky-200" />
-                      <InputOTPSlot index={3} className="w-12 h-14 text-xl border-sky-200" />
-                      <InputOTPSlot index={4} className="w-12 h-14 text-xl border-sky-200" />
-                      <InputOTPSlot index={5} className="w-12 h-14 text-xl border-sky-200" />
+                      <InputOTPSlot index={0} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
+                      <InputOTPSlot index={1} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
+                      <InputOTPSlot index={2} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
+                      <InputOTPSlot index={3} className="w-14 h-16 text-2xl border-sky-200 rounded-xl" />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
@@ -204,7 +237,7 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   className="w-full bg-sky-500 hover:bg-sky-600 h-12 rounded-xl text-base"
-                  disabled={loading || otpCode.length !== 6}
+                  disabled={loading || otpCode.length !== 4}
                 >
                   {loading ? 'Memverifikasi...' : 'Verifikasi'}
                 </Button>
@@ -241,7 +274,7 @@ export default function RegisterPage() {
           <Card className="w-full max-w-md border-sky-100 shadow-xl">
             <CardHeader className="text-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-10 h-10 text-green-500" />
+                <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
               <CardTitle className="text-2xl text-sky-900">Buat Password</CardTitle>
               <CardDescription>

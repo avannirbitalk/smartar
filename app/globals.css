@@ -65,9 +65,17 @@
 
 /* Content like book */
 .materi-content {
-  @apply prose prose-slate max-w-none;
-  @apply prose-headings:text-sky-900 prose-headings:font-bold;
-  @apply prose-p:text-slate-700 prose-p:leading-relaxed;
+  @apply max-w-none;
+}
+
+.materi-content h1,
+.materi-content h2,
+.materi-content h3 {
+  @apply text-sky-900 font-bold mb-4;
+}
+
+.materi-content p {
+  @apply text-slate-700 leading-relaxed mb-4;
 }
 
 /* KaTeX math styling */

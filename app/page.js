@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { BookOpen, Cube, QrCode, Users, ArrowRight, GraduationCap } from 'lucide-react'
+import { BookOpen, Box, QrCode, Users, ArrowRight, GraduationCap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Cube, Mail, Lock, Eye, EyeOff, ArrowLeft, User, GraduationCap, BookOpen } from 'lucide-react'
+import { Box, Mail, Lock, Eye, EyeOff, ArrowLeft, User, GraduationCap, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -68,7 +68,7 @@ export default function RegisterPage() {
 
   if (step === 2) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 to-white">
         <header className="p-4">
           <Link href="/" className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700">
             <ArrowLeft className="w-5 h-5" />
@@ -76,17 +76,17 @@ export default function RegisterPage() {
           </Link>
         </header>
         <div className="flex-1 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md border-sky-100 text-center">
+          <Card className="w-full max-w-md border-sky-100 text-center shadow-xl">
             <CardContent className="pt-8 pb-8">
               <div className="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Mail className="w-10 h-10 text-sky-500" />
               </div>
               <h2 className="text-2xl font-bold text-sky-900 mb-2">Cek Email Anda</h2>
               <p className="text-slate-600 mb-6">
-                Kami telah mengirim link verifikasi ke <strong>{email}</strong>. 
+                Kami telah mengirim link verifikasi ke <strong className="text-sky-700">{email}</strong>. 
                 Klik link tersebut untuk mengaktifkan akun Anda.
               </p>
-              <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-sm text-sky-700">
+              <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sm text-sky-700">
                 <p>💡 Tidak menerima email? Cek folder spam atau tunggu beberapa menit.</p>
               </div>
               <Button asChild className="mt-6 bg-sky-500 hover:bg-sky-600">
@@ -100,7 +100,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 to-white">
       {/* Header */}
       <header className="p-4">
         <Link href="/" className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700">
@@ -111,10 +111,10 @@ export default function RegisterPage() {
 
       {/* Form */}
       <div className="flex-1 flex items-center justify-center p-4 pb-8">
-        <Card className="w-full max-w-md border-sky-100">
+        <Card className="w-full max-w-md border-sky-100 shadow-xl">
           <CardHeader className="text-center">
             <div className="w-16 h-16 bg-sky-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Cube className="w-10 h-10 text-white" />
+              <Box className="w-10 h-10 text-white" />
             </div>
             <CardTitle className="text-2xl text-sky-900">Daftar Akun</CardTitle>
             <CardDescription>Buat akun SmartAR Edu baru</CardDescription>
@@ -122,7 +122,7 @@ export default function RegisterPage() {
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-4">
               {error && (
-                <div className="bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-xl text-sm">
                   {error}
                 </div>
               )}
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                     placeholder="Masukkan nama lengkap"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="pl-10 border-sky-200 focus:border-sky-500"
+                    className="pl-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
                     required
                   />
                 </div>
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                     placeholder="nama@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 border-sky-200 focus:border-sky-500"
+                    className="pl-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
                     required
                   />
                 </div>
@@ -196,7 +196,7 @@ export default function RegisterPage() {
                     placeholder="Minimal 6 karakter"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 border-sky-200 focus:border-sky-500"
+                    className="pl-10 pr-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
                     required
                   />
                   <button
@@ -219,7 +219,7 @@ export default function RegisterPage() {
                     placeholder="Ulangi password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 border-sky-200 focus:border-sky-500"
+                    className="pl-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
                     required
                   />
                 </div>
@@ -227,7 +227,7 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-sky-500 hover:bg-sky-600 h-12"
+                className="w-full bg-sky-500 hover:bg-sky-600 h-12 rounded-xl text-base"
                 disabled={loading}
               >
                 {loading ? 'Memproses...' : 'Daftar'}

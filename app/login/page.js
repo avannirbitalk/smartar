@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Cube, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Box, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,7 +42,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-50 to-white">
       {/* Header */}
       <header className="p-4">
         <Link href="/" className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700">
@@ -53,10 +53,10 @@ export default function LoginPage() {
 
       {/* Form */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md border-sky-100">
+        <Card className="w-full max-w-md border-sky-100 shadow-xl">
           <CardHeader className="text-center">
             <div className="w-16 h-16 bg-sky-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Cube className="w-10 h-10 text-white" />
+              <Box className="w-10 h-10 text-white" />
             </div>
             <CardTitle className="text-2xl text-sky-900">Masuk</CardTitle>
             <CardDescription>Masuk ke akun SmartAR Edu Anda</CardDescription>
@@ -64,7 +64,7 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               {error && (
-                <div className="bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-xl text-sm">
                   {error}
                 </div>
               )}
@@ -79,7 +79,7 @@ export default function LoginPage() {
                     placeholder="nama@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 border-sky-200 focus:border-sky-500"
+                    className="pl-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
                     required
                   />
                 </div>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 border-sky-200 focus:border-sky-500"
+                    className="pl-10 pr-10 h-12 border-sky-200 focus:border-sky-500 rounded-xl"
                     required
                   />
                   <button
@@ -110,7 +110,7 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-sky-500 hover:bg-sky-600 h-12"
+                className="w-full bg-sky-500 hover:bg-sky-600 h-12 rounded-xl text-base"
                 disabled={loading}
               >
                 {loading ? 'Memproses...' : 'Masuk'}

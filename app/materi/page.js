@@ -3,10 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Box, ArrowLeft, ChevronLeft, ChevronRight, BookOpen, Play, QrCode } from 'lucide-react'
+import { Box, ArrowLeft, ChevronLeft, ChevronRight, BookOpen, Play, QrCode, Youtube, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import YouTubeEmbed from '@/components/YouTubeEmbed'
+import FileAttachment from '@/components/FileAttachment'
+import { RenderLatex } from '@/components/LaTeX'
 
 const Model3DViewer = dynamic(() => import('@/components/Model3DViewer'), {
   ssr: false,
@@ -22,12 +25,13 @@ const Model3DViewer = dynamic(() => import('@/components/Model3DViewer'), {
 
 const STORAGE_URL = 'https://hmgdlcwzpmbgvfpaiylz.supabase.co/storage/v1/object/public/images'
 
-// Comprehensive materi content - like a digital book
+// Comprehensive materi content with LaTeX, Video, and File support
 const materiPages = [
   {
     id: 1,
     chapter: 'Pendahuluan',
     title: 'Bangun Ruang Sisi Datar',
+    contentType: 'text',
     content: `
       <div class="chapter-intro">
         <h1>BAB 1</h1>
@@ -53,6 +57,7 @@ const materiPages = [
     id: 2,
     chapter: 'Kubus',
     title: 'Pengertian Kubus',
+    contentType: 'text',
     content: `
       <h2>A. Pengertian Kubus</h2>
       <div class="definition-box">
@@ -72,16 +77,15 @@ const materiPages = [
     id: 3,
     chapter: 'Kubus',
     title: 'Volume Kubus',
+    contentType: 'text',
     content: `
       <h2>B. Volume Kubus</h2>
       <p>Volume adalah ukuran banyaknya ruang yang dapat ditempati oleh suatu bangun ruang.</p>
       <p>Untuk menghitung volume kubus, kita menggunakan rumus:</p>
-      <div class="formula-box">
-        <span class="formula">V = s × s × s = s³</span>
-        <p class="formula-note">di mana <strong>s</strong> adalah panjang sisi (rusuk) kubus</p>
-      </div>
-      <p>Perhatikan visualisasi kubus di bawah ini. Kubus tersebut terbagi menjadi 64 kubus satuan (4 × 4 × 4), yang menunjukkan bahwa volumenya adalah 64 satuan kubik.</p>
     `,
+    latex: '$$V = s \\times s \\times s = s^3$$',
+    latexNote: 'di mana $s$ adalah panjang sisi (rusuk) kubus',
+    afterContent: `<p>Perhatikan visualisasi kubus di bawah ini. Kubus tersebut terbagi menjadi 64 kubus satuan ($4 \\times 4 \\times 4$), yang menunjukkan bahwa volumenya adalah $64$ satuan kubik.</p>`,
     model: {
       modelUrl: `${STORAGE_URL}/animasi/kubus-64.glb`,
       arUrl: 'https://mywebar.com/p/objek1volumekubus',
@@ -93,6 +97,7 @@ const materiPages = [
     id: 4,
     chapter: 'Kubus',
     title: 'Contoh Soal Volume Kubus',
+    contentType: 'text',
     content: `
       <h2>Contoh Soal Volume Kubus</h2>
       <div class="example-box">
@@ -100,29 +105,43 @@ const materiPages = [
         <p>Sebuah kubus memiliki panjang rusuk 5 cm. Hitunglah volume kubus tersebut!</p>
         <div class="solution">
           <h4>Penyelesaian:</h4>
-          <p>Diketahui: s = 5 cm</p>
-          <p>Ditanya: V = ?</p>
+          <p>Diketahui: $s = 5$ cm</p>
+          <p>Ditanya: $V = ?$</p>
           <p>Jawab:</p>
-          <p class="calc">V = s³ = 5³ = 5 × 5 × 5 = <strong>125 cm³</strong></p>
         </div>
       </div>
+    `,
+    latex: '$$V = s^3 = 5^3 = 5 \\times 5 \\times 5 = 125 \\text{ cm}^3$$',
+    afterContent: `
       <div class="example-box">
         <h4>Contoh 2:</h4>
-        <p>Volume sebuah kubus adalah 343 cm³. Berapakah panjang rusuk kubus tersebut?</p>
+        <p>Volume sebuah kubus adalah $343$ cm³. Berapakah panjang rusuk kubus tersebut?</p>
         <div class="solution">
           <h4>Penyelesaian:</h4>
-          <p>Diketahui: V = 343 cm³</p>
-          <p>Ditanya: s = ?</p>
-          <p>Jawab:</p>
-          <p class="calc">s = ³√V = ³√343 = <strong>7 cm</strong></p>
+          <p>Diketahui: $V = 343$ cm³</p>
+          <p>Ditanya: $s = ?$</p>
+          <p>Jawab: $s = \\sqrt[3]{V} = \\sqrt[3]{343} = 7$ cm</p>
         </div>
       </div>
     `
   },
   {
     id: 5,
+    chapter: 'Kubus',
+    title: 'Video: Cara Menghitung Volume Kubus',
+    contentType: 'video',
+    content: `
+      <h2>Video Pembelajaran</h2>
+      <p>Tonton video berikut untuk memahami cara menghitung volume kubus dengan lebih jelas:</p>
+    `,
+    videoUrl: 'https://www.youtube.com/watch?v=hDSEX0RFBUU',
+    videoTitle: 'Cara Menghitung Volume Kubus'
+  },
+  {
+    id: 6,
     chapter: 'Balok',
     title: 'Pengertian Balok',
+    contentType: 'text',
     content: `
       <h2>C. Pengertian Balok</h2>
       <div class="definition-box">
@@ -131,39 +150,41 @@ const materiPages = [
       <h3>Unsur-unsur Balok:</h3>
       <ul>
         <li><strong>Sisi:</strong> Balok memiliki 6 sisi berbentuk persegi panjang. Sisi-sisi yang berhadapan kongruen.</li>
-        <li><strong>Rusuk:</strong> Balok memiliki 12 rusuk yang terdiri dari 4 rusuk panjang (p), 4 rusuk lebar (l), dan 4 rusuk tinggi (t).</li>
+        <li><strong>Rusuk:</strong> Balok memiliki 12 rusuk yang terdiri dari 4 rusuk panjang ($p$), 4 rusuk lebar ($l$), dan 4 rusuk tinggi ($t$).</li>
         <li><strong>Titik Sudut:</strong> Balok memiliki 8 titik sudut.</li>
       </ul>
       <h3>Perbedaan Kubus dan Balok:</h3>
-      <p>Kubus adalah balok khusus yang memiliki panjang, lebar, dan tinggi sama (p = l = t).</p>
-    `
-  },
-  {
-    id: 6,
-    chapter: 'Balok',
-    title: 'Volume Balok',
-    content: `
-      <h2>D. Volume Balok</h2>
-      <p>Volume balok dihitung dengan mengalikan panjang, lebar, dan tinggi balok:</p>
-      <div class="formula-box">
-        <span class="formula">V = p × l × t</span>
-        <p class="formula-note">di mana <strong>p</strong> = panjang, <strong>l</strong> = lebar, <strong>t</strong> = tinggi</p>
-      </div>
-      <div class="example-box">
-        <h4>Contoh:</h4>
-        <p>Sebuah balok memiliki panjang 8 cm, lebar 5 cm, dan tinggi 4 cm. Hitunglah volume balok tersebut!</p>
-        <div class="solution">
-          <h4>Penyelesaian:</h4>
-          <p>V = p × l × t</p>
-          <p class="calc">V = 8 × 5 × 4 = <strong>160 cm³</strong></p>
-        </div>
-      </div>
+      <p>Kubus adalah balok khusus yang memiliki panjang, lebar, dan tinggi sama ($p = l = t$).</p>
     `
   },
   {
     id: 7,
     chapter: 'Balok',
+    title: 'Volume Balok',
+    contentType: 'text',
+    content: `
+      <h2>D. Volume Balok</h2>
+      <p>Volume balok dihitung dengan mengalikan panjang, lebar, dan tinggi balok:</p>
+    `,
+    latex: '$$V = p \\times l \\times t$$',
+    latexNote: 'di mana $p$ = panjang, $l$ = lebar, $t$ = tinggi',
+    afterContent: `
+      <div class="example-box">
+        <h4>Contoh:</h4>
+        <p>Sebuah balok memiliki panjang 8 cm, lebar 5 cm, dan tinggi 4 cm. Hitunglah volume balok tersebut!</p>
+        <div class="solution">
+          <h4>Penyelesaian:</h4>
+          <p>$V = p \\times l \\times t$</p>
+          <p>$V = 8 \\times 5 \\times 4 = 160$ cm³</p>
+        </div>
+      </div>
+    `
+  },
+  {
+    id: 8,
+    chapter: 'Balok',
     title: 'Luas Permukaan Balok',
+    contentType: 'text',
     content: `
       <h2>E. Luas Permukaan Balok</h2>
       <p>Luas permukaan balok adalah jumlah luas seluruh sisi balok.</p>
@@ -181,39 +202,40 @@ const materiPages = [
     }
   },
   {
-    id: 8,
+    id: 9,
     chapter: 'Balok',
     title: 'Rumus Luas Permukaan Balok',
+    contentType: 'text',
     content: `
       <h2>Rumus Luas Permukaan Balok</h2>
       <p>Dari jaring-jaring balok, kita dapat melihat bahwa balok memiliki 3 pasang sisi yang kongruen:</p>
       <ul>
-        <li>2 sisi dengan luas <strong>p × l</strong> (atas dan bawah)</li>
-        <li>2 sisi dengan luas <strong>p × t</strong> (depan dan belakang)</li>
-        <li>2 sisi dengan luas <strong>l × t</strong> (kiri dan kanan)</li>
+        <li>2 sisi dengan luas $p \\times l$ (atas dan bawah)</li>
+        <li>2 sisi dengan luas $p \\times t$ (depan dan belakang)</li>
+        <li>2 sisi dengan luas $l \\times t$ (kiri dan kanan)</li>
       </ul>
-      <div class="formula-box">
-        <span class="formula">L = 2(pl + pt + lt)</span>
-        <p class="formula-note">di mana <strong>p</strong> = panjang, <strong>l</strong> = lebar, <strong>t</strong> = tinggi</p>
-      </div>
+    `,
+    latex: '$$L = 2(pl + pt + lt)$$',
+    latexNote: 'di mana $p$ = panjang, $l$ = lebar, $t$ = tinggi',
+    afterContent: `
       <div class="example-box">
         <h4>Contoh:</h4>
         <p>Sebuah balok memiliki panjang 8 cm, lebar 5 cm, dan tinggi 4 cm. Hitunglah luas permukaannya!</p>
         <div class="solution">
           <h4>Penyelesaian:</h4>
-          <p>L = 2(pl + pt + lt)</p>
-          <p>L = 2(8×5 + 8×4 + 5×4)</p>
-          <p>L = 2(40 + 32 + 20)</p>
-          <p>L = 2(92)</p>
-          <p class="calc">L = <strong>184 cm²</strong></p>
+          <p>$L = 2(pl + pt + lt)$</p>
+          <p>$L = 2(8 \\times 5 + 8 \\times 4 + 5 \\times 4)$</p>
+          <p>$L = 2(40 + 32 + 20)$</p>
+          <p>$L = 2(92) = 184$ cm²</p>
         </div>
       </div>
     `
   },
   {
-    id: 9,
+    id: 10,
     chapter: 'Balok',
     title: 'Variasi Jaring-jaring Balok',
+    contentType: 'text',
     content: `
       <h2>Variasi Jaring-jaring Balok</h2>
       <p>Jaring-jaring balok memiliki beberapa variasi bentuk. Berikut adalah variasi lain dari jaring-jaring balok:</p>
@@ -230,9 +252,10 @@ const materiPages = [
     }
   },
   {
-    id: 10,
+    id: 11,
     chapter: 'Rangkuman',
     title: 'Rangkuman Materi',
+    contentType: 'text',
     content: `
       <h2>📝 Rangkuman</h2>
       <div class="summary-box">
@@ -240,8 +263,8 @@ const materiPages = [
         <ul>
           <li>Bangun ruang dengan 6 sisi persegi kongruen</li>
           <li>Memiliki 12 rusuk sama panjang dan 8 titik sudut</li>
-          <li>Volume: <strong>V = s³</strong></li>
-          <li>Luas Permukaan: <strong>L = 6s²</strong></li>
+          <li>Volume: $V = s^3$</li>
+          <li>Luas Permukaan: $L = 6s^2$</li>
         </ul>
       </div>
       <div class="summary-box">
@@ -249,8 +272,8 @@ const materiPages = [
         <ul>
           <li>Bangun ruang dengan 6 sisi persegi panjang</li>
           <li>Sisi-sisi berhadapan kongruen</li>
-          <li>Volume: <strong>V = p × l × t</strong></li>
-          <li>Luas Permukaan: <strong>L = 2(pl + pt + lt)</strong></li>
+          <li>Volume: $V = p \\times l \\times t$</li>
+          <li>Luas Permukaan: $L = 2(pl + pt + lt)$</li>
         </ul>
       </div>
       <div class="next-step">
@@ -282,6 +305,12 @@ export default function MateriPage() {
   const goToPage = (index) => {
     setCurrentPage(index)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Render content with LaTeX support
+  const renderContent = (html) => {
+    if (!html) return null
+    return <RenderLatex content={html} />
   }
 
   return (
@@ -320,12 +349,58 @@ export default function MateriPage() {
           {/* Content Card */}
           <Card className="border-sky-100 shadow-lg mb-6 overflow-hidden">
             <CardContent className="p-5 md:p-8">
-              <div 
-                className="materi-content"
-                dangerouslySetInnerHTML={{ __html: page.content }}
-              />
+              <div className="materi-content">
+                {renderContent(page.content)}
+              </div>
+              
+              {/* LaTeX Display */}
+              {page.latex && (
+                <div className="my-6">
+                  <div className="formula-box">
+                    <RenderLatex content={page.latex} />
+                  </div>
+                  {page.latexNote && (
+                    <p className="text-center text-sm text-slate-600 mt-2">
+                      <RenderLatex content={page.latexNote} />
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* After Content */}
+              {page.afterContent && (
+                <div className="materi-content mt-4">
+                  {renderContent(page.afterContent)}
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Video Embed */}
+          {page.contentType === 'video' && page.videoUrl && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Youtube className="w-5 h-5 text-red-600" />
+                <span className="font-semibold text-sky-900">{page.videoTitle || 'Video Pembelajaran'}</span>
+              </div>
+              <YouTubeEmbed url={page.videoUrl} title={page.videoTitle} />
+            </div>
+          )}
+
+          {/* File Attachment */}
+          {page.contentType === 'file' && page.fileUrl && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <span className="font-semibold text-sky-900">File Lampiran</span>
+              </div>
+              <FileAttachment 
+                url={page.fileUrl} 
+                filename={page.fileName}
+                size={page.fileSize}
+              />
+            </div>
+          )}
 
           {/* 3D Model */}
           {page.model && (
@@ -502,19 +577,8 @@ export default function MateriPage() {
           border-radius: 1rem;
           padding: 1.5rem;
           text-align: center;
-          margin: 1.5rem 0;
-        }
-        .formula-box .formula {
-          display: block;
-          font-size: 1.5rem;
-          font-weight: 700;
+          font-size: 1.25rem;
           color: #0369a1;
-          margin-bottom: 0.5rem;
-        }
-        .formula-box .formula-note {
-          font-size: 0.875rem;
-          color: #64748b;
-          margin: 0;
         }
         .example-box {
           background: #fff;
@@ -538,10 +602,6 @@ export default function MateriPage() {
         }
         .solution p {
           margin-bottom: 0.5rem;
-        }
-        .solution .calc {
-          font-size: 1.1rem;
-          color: #0c4a6e;
         }
         .info-box {
           background: #ecfeff;
@@ -578,6 +638,13 @@ export default function MateriPage() {
           margin: 0;
           color: #166534;
           font-weight: 500;
+        }
+        /* KaTeX styling */
+        .katex {
+          font-size: 1.1em;
+        }
+        .katex-display {
+          margin: 0.5em 0;
         }
       `}</style>
     </div>

@@ -110,7 +110,7 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-sky-100 to-sky-50 rounded-3xl p-8 shadow-xl border border-sky-200">
             <div className="aspect-video bg-white rounded-2xl flex items-center justify-center shadow-inner">
               <div className="text-center">
-                <Cube className="w-20 h-20 text-sky-400 mx-auto mb-4 animate-pulse" />
+                <Box className="w-20 h-20 text-sky-400 mx-auto mb-4 animate-pulse" />
                 <p className="text-sky-600 font-medium">3D Viewer Preview</p>
                 <p className="text-sm text-slate-500 mt-1">Login untuk melihat objek 3D interaktif</p>
               </div>

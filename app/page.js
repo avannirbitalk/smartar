@@ -25,7 +25,7 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: <Cube className="w-8 h-8" />,
+      icon: <Box className="w-8 h-8" />,
       title: '3D Viewer',
       description: 'Visualisasi objek 3D interaktif untuk pemahaman yang lebih baik'
     },
